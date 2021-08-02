@@ -47,9 +47,6 @@ const Viewer: React.FC<ViewerProps> = (props: ViewerProps) => {
     // contextを状態として持つ
     const [context, setContext] = useState<CanvasRenderingContext2D | null>(null)
 
-    // 画像読み込み完了トリガー
-    const [loaded, setLoaded] = useState(false)
-
     useEffect(() => {
         const canvas = document.getElementById(props.idName) as HTMLCanvasElement
         const canvasContext = canvas!.getContext("2d")
@@ -120,14 +117,9 @@ const Viewer: React.FC<ViewerProps> = (props: ViewerProps) => {
                     // 更にこれに続いて何か処理をしたい場合
                 }
             }
-            setLoaded(true)
         }
     }, [context, props.image])
-    useEffect(() => {
-        if (loaded) {
-            // それに続く処理
-        }
-    }, [loaded])
+
     return <canvas height={max_h} width={max_w} id={props.idName}></canvas>
 }
 
