@@ -27,7 +27,7 @@ function numpy2Uint8Array(data: Array<number>): Array<number> {
         res[4 * i] = val
         res[4 * i + 1] = val
         res[4 * i + 2] = val
-        res[4 * i + 3] = (data[i] == 0) ? 0 : 255
+        res[4 * i + 3] = (data[i] === 0) ? 0 : 255
     }
     return res
 }
@@ -112,7 +112,6 @@ const Viewer: React.FC<ViewerProps> = (props: ViewerProps) => {
                     var scale = Math.min(max_w / width, max_h / height, 1)
                     var dstWidth = width * scale
                     var dstHeight = height * scale
-                    console.log(width, height, dstWidth, dstHeight)
                     context.drawImage(img, 0, 0, width, height, 0, 0, dstWidth, dstHeight)
                     // 更にこれに続いて何か処理をしたい場合
                 }

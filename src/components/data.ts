@@ -1,0 +1,168 @@
+// image, mask に対するクラスの定義
+
+var UTIF = require("utif")
+var npyjs = require("npyjs")
+
+// tiff か png,jpegなどから画像を表示
+export async function createBaseImageDataFromPath(imagePath: string): Promise<ImageData> {
+    var imageData: ImageData;
+    var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
+    if (extend === 'tiff' || extend === 'tif') {
+        imageData = await loadTiffWrapper(imagePath)
+    } else {
+        imageData = await loadImageWrapper(imagePath)
+    }
+    return imageData
+}
+
+
+
+function loadTiffWrapper(imagePath: string): Promise<ImageData> {
+    return new Promise(function (resolve) {
+        var xhr = new XMLHttpRequest()
+        xhr.responseType = 'arraybuffer'
+        xhr.open('GET', imagePath)
+        xhr.onload = (e: any) => {
+            var ifds = UTIF.decode(e.target.response)
+            UTIF.decodeImage(e.target.response, ifds[0])
+            var rgba = UTIF.toRGBA8(ifds[0])  // Uint8Array with RGBA pixels
+            var imageData = new ImageData(new Uint8ClampedArray(rgba), ifds[0].width, ifds[0].height)
+            resolve(imageData)
+        }
+        xhr.send()
+    })
+}
+
+
+function loadImageWrapper(imagePath: string): Promise<ImageData> {
+    return new Promise(function (resolve) {
+        const img = new Image()
+        img.src = imagePath // 描画する画像など
+        img.onload = async () => {
+            const canvas = document.createElement("canvas")
+            const context = canvas.getContext("2d")
+            var data = await imageToUint8Array(img, context)
+            var imageData = new ImageData(data, img.width, img.height)
+            resolve(imageData)
+        }
+    })
+}
+
+
+async function imageToUint8Array(image: any, context: any): Promise<Uint8ClampedArray> {
+    return new Promise((resolve, reject) => {
+        context.width = image.width;
+        context.height = image.height;
+        context.drawImage(image, 0, 0);
+        context.canvas.toBlob((blob: Blob) => blob.arrayBuffer()
+            .then(buffer => resolve(new Uint8ClampedArray(buffer))).catch(reject)
+        )
+    });
+}
+
+
+
+
+/*// npyから画像を表示
+*/
+export async function createMaskImageDataFromNpy(imagePath: string): Promise<ImageData> {
+    var imageData: ImageData;
+    var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
+    if (extend === 'npy') {
+        imageData = await loadNpyWrapper(imagePath)
+    } else {
+        throw new Error('Not npy file');
+    }
+    return imageData
+}
+
+function loadNpyWrapper(imagePath: string): Promise<ImageData> {
+    return new Promise(function (resolve) {
+        let n = new npyjs();
+        n.load(imagePath).then((res: any) => {
+            // dtype: string, data: Uint8Array, shape: Array<number>
+            var width = res.shape[1]
+            var height = res.shape[0]
+            var rgba = numpy2Uint8ClampedArray(res.data)
+            resolve(new ImageData(rgba, width, height))
+        });
+    })
+}
+
+function numpy2Uint8ClampedArray(data: Array<number>): Uint8ClampedArray {
+    let res = new Uint8ClampedArray(4 * data.length)
+    let unique_len = Array.from(new Set(data)).length
+
+    // 種類ごとにピクセル数をカウント
+    let countmap = new Map();
+    for (let i = 0; i < data.length; i++) {
+        (countmap.has(data[i])) ? countmap.set(data[i], countmap.get(data[i]) + 1) : countmap.set(data[i], 0);
+    }
+    countmap.delete(0) // 0 は背景なので削除
+
+    // 降順に255~0までの値を割り振る
+    const orderlist = [...countmap.entries()].sort((a, b) => b[1] - a[1])
+    let colormap = new Map()
+    for (let i = 0; i < orderlist.length; i++) {
+        colormap.set(orderlist[i][0], Math.round(i * (255 / unique_len / 2)))
+    }
+    colormap.set(0, 255)
+
+    for (let i = 0; i < data.length; i++) {
+        let val = colormap.get(data[i])
+        res[4 * i] = val
+        res[4 * i + 1] = val
+        res[4 * i + 2] = val
+        res[4 * i + 3] = (data[i] === 0) ? 0 : 255
+    }
+    return res
+}
+
+
+//
+export class RawData {
+    rgba: Uint8Array = new Uint8Array([])
+    width: number = 0
+    height: number = 0
+
+    constructor(imagePath: string) {
+        var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
+        if (extend === 'tiff' || extend === 'tif') {
+            this.loadTiff(imagePath)
+        } else {
+            this.loadImage(imagePath)
+        }
+    }
+
+    loadTiff(imagePath: string) {
+        var xhr = new XMLHttpRequest()
+        xhr.responseType = 'arraybuffer'
+        xhr.open('GET', imagePath)
+        xhr.onload = (e: any) => {
+            var ifds = UTIF.decode(e.target.response)
+            UTIF.decodeImage(e.target.response, ifds[0])
+            var data = UTIF.toRGBA8(ifds[0])
+            for (let i = 0; i < data.length; i++) {
+                this.rgba[i] = data[i]
+            }
+            this.width = ifds[0].width
+            this.height = ifds[0].height
+        }
+        xhr.send()
+    }
+
+    loadImage(imagePath: string) {
+        const img = new Image()
+        img.src = imagePath // 描画する画像など
+        img.onload = async () => {
+            this.width = img.width
+            this.height = img.height
+            const canvas = document.createElement("canvas")
+            const context = canvas.getContext("2d")
+            var data = await imageToUint8Array(img, context)
+            for (let i = 0; i < data.length; i++) {
+                this.rgba[i] = data[i]
+            }
+        }
+    }
+}
