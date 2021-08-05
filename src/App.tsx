@@ -89,7 +89,7 @@ function App() {
         </Grid>
 
         <Grid item xs={12}>
-          <Grid item xs={12}><p>自分でアップロード</p></Grid>
+          <Grid item xs={12}><p>ローカルのファイルを表示</p></Grid>
           <Grid item xs={12}>画像：<input type="file" onChange={onBaseFileChange} /></Grid>
           <Grid item xs={12}>アノテーション：<input type="file" onChange={onMaskFileChange} /></Grid>
         </Grid>
