@@ -10,6 +10,8 @@ import Canvas from "./components/modules/Canvas";
 import {
   createBaseImageDataFromPath,
   createMaskImageDataFromNpy,
+  createBaseImageDataFromFile,
+  createMaskImageDataFromFile,
 } from './components/data'
 
 const useStyles = makeStyles({
@@ -31,28 +33,25 @@ const baseAndMaskPairList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num: number) =>
 function App() {
   const classes = useStyles()
   const [maskalpha, setMaskalpha] = React.useState(80)
-  //const [selectedBaseFile, setSelectedBaseFile] = React.useState()
-  //const [selectedMaskFile, setSelectedMaskFile] = React.useState()
+  const [selectedBaseFile, setSelectedBaseFile] = React.useState()
+  const [selectedMaskFile, setSelectedMaskFile] = React.useState()
   const [baseImageData, setBaseImageData] = React.useState<ImageData | null>(null)
   const [maskImageData, setMaskImageData] = React.useState<ImageData | null>(null)
   const handleChange = (_event: any, newValue: any) => {
     setMaskalpha(newValue)
   }
 
-  /*
-  // On file select (from the pop up)
+  // tiff select
   const onBaseFileChange = (event: any) => {
-    var url = URL.createObjectURL(event.target.files[0])
-    console.log(url)
     createBaseImageDataFromFile(event.target.files[0]).then((resImageData) => setBaseImageData(resImageData))
     setSelectedBaseFile(event.target.files[0]);
   };
+  // npy select
   const onMaskFileChange = (event: any) => {
-    var url = URL.createObjectURL(event.target.files[0])
-    createBaseImageDataFromPath(event.target.files[0]).then((resImageData) => setMaskImageData(resImageData))
+    createMaskImageDataFromFile(event.target.files[0]).then((resImageData) => setMaskImageData(resImageData))
     setSelectedMaskFile(event.target.files[0])
   };
-  */
+
 
   useEffect(() => {
     // base
@@ -71,11 +70,6 @@ function App() {
   };
 
   /*
-        <Grid item xs={12}>
-          <Grid item xs={12}><p>自分でアップロード</p></Grid>
-          <Grid item xs={12}>画像：<input type="file" onChange={onBaseFileChange} /></Grid>
-          <Grid item xs={12}>アノテーション：<input type="file" onChange={onMaskFileChange} /></Grid>
-        </Grid>
   */
   return (
     <div className="App">
@@ -84,7 +78,7 @@ function App() {
 
       <Grid container spacing={3}>
         <Grid item xs={12} >
-          <p>既にあるデータを表示する</p>
+          <p>既にあるデータを表示(ロード遅め)</p>
           <ButtonGroup color="primary" aria-label="outlined primary button group">
             {
               baseAndMaskPairList.map((baseAndMask) => {
@@ -93,6 +87,13 @@ function App() {
             }
           </ButtonGroup>
         </Grid>
+
+        <Grid item xs={12}>
+          <Grid item xs={12}><p>自分でアップロード</p></Grid>
+          <Grid item xs={12}>画像：<input type="file" onChange={onBaseFileChange} /></Grid>
+          <Grid item xs={12}>アノテーション：<input type="file" onChange={onMaskFileChange} /></Grid>
+        </Grid>
+
         <Grid item xs={12} md={6}>
           <p>画像</p>
           <Canvas imageData={baseImageData} max_w={500} max_h={400} idName="base" />
