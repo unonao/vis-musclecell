@@ -9,7 +9,7 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Canvas from "./components/modules/Canvas";
 import {
   createBaseImageDataFromPath,
-  createMaskImageDataFromNpy
+  createMaskImageDataFromNpy,
 } from './components/data'
 
 const useStyles = makeStyles({
@@ -31,17 +31,28 @@ const baseAndMaskPairList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num: number) =>
 function App() {
   const classes = useStyles()
   const [maskalpha, setMaskalpha] = React.useState(80)
-  const [selectedBaseFile, setSelectedBaseFile] = React.useState()
+  //const [selectedBaseFile, setSelectedBaseFile] = React.useState()
+  //const [selectedMaskFile, setSelectedMaskFile] = React.useState()
   const [baseImageData, setBaseImageData] = React.useState<ImageData | null>(null)
   const [maskImageData, setMaskImageData] = React.useState<ImageData | null>(null)
   const handleChange = (_event: any, newValue: any) => {
     setMaskalpha(newValue)
   }
 
+  /*
   // On file select (from the pop up)
-  const onFileChange = (event: any) => {
+  const onBaseFileChange = (event: any) => {
+    var url = URL.createObjectURL(event.target.files[0])
+    console.log(url)
+    createBaseImageDataFromFile(event.target.files[0]).then((resImageData) => setBaseImageData(resImageData))
     setSelectedBaseFile(event.target.files[0]);
   };
+  const onMaskFileChange = (event: any) => {
+    var url = URL.createObjectURL(event.target.files[0])
+    createBaseImageDataFromPath(event.target.files[0]).then((resImageData) => setMaskImageData(resImageData))
+    setSelectedMaskFile(event.target.files[0])
+  };
+  */
 
   useEffect(() => {
     // base
@@ -59,13 +70,20 @@ function App() {
     createMaskImageDataFromNpy(baseAndMaskPairList[id]['mask']).then((resImageData) => setMaskImageData(resImageData))
   };
 
+  /*
+        <Grid item xs={12}>
+          <Grid item xs={12}><p>自分でアップロード</p></Grid>
+          <Grid item xs={12}>画像：<input type="file" onChange={onBaseFileChange} /></Grid>
+          <Grid item xs={12}>アノテーション：<input type="file" onChange={onMaskFileChange} /></Grid>
+        </Grid>
+  */
   return (
     <div className="App">
 
       <h1>Muscle cell viewer</h1>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} spacing={5}>
+        <Grid item xs={12} >
           <p>既にあるデータを表示する</p>
           <ButtonGroup color="primary" aria-label="outlined primary button group">
             {
@@ -74,11 +92,6 @@ function App() {
               })
             }
           </ButtonGroup>
-        </Grid>
-        <Grid container xs={12}>
-          <Grid item xs={12}><p>自分でアップロード</p></Grid>
-          <Grid item xs={12}>画像：<input type="file" onChange={onFileChange} /></Grid>
-          <Grid item xs={12}>アノテーション：<input type="file" onChange={onFileChange} /></Grid>
         </Grid>
         <Grid item xs={12} md={6}>
           <p>画像</p>

@@ -1,7 +1,36 @@
 // image, mask に対するクラスの定義
-
 var UTIF = require("utif")
 var npyjs = require("npyjs")
+
+
+// tiffから画像を表示
+export async function createBaseImageDataFromFile(imageFile: File): Promise<ImageData> {
+    var imageData: ImageData;
+    var extend: string = imageFile.name.split("/").reverse()[0].split('.')[1]
+    if (extend === 'tiff' || extend === 'tif') {
+        imageData = await loadTifFilefWrapper(imageFile)
+    } else {
+        throw new Error('Not npy file');
+    }
+    return imageData
+}
+
+function loadTifFilefWrapper(imageFile: File): Promise<ImageData> {
+    return new Promise(function (resolve) {
+        var reader = new FileReader();
+        reader.onload = (e: any) => {
+            var ifds = UTIF.decode(e.target.response)
+            UTIF.decodeImage(e.target.response, ifds[0])
+            var rgba = UTIF.toRGBA8(ifds[0])  // Uint8Array with RGBA pixels
+            var imageData = new ImageData(new Uint8ClampedArray(rgba), ifds[0].width, ifds[0].height)
+            resolve(imageData)
+        }
+        reader.readAsArrayBuffer(imageFile);
+    })
+}
+
+
+
 
 // tiff か png,jpegなどから画像を表示
 export async function createBaseImageDataFromPath(imagePath: string): Promise<ImageData> {
@@ -14,8 +43,6 @@ export async function createBaseImageDataFromPath(imagePath: string): Promise<Im
     }
     return imageData
 }
-
-
 
 function loadTiffWrapper(imagePath: string): Promise<ImageData> {
     return new Promise(function (resolve) {
@@ -47,7 +74,6 @@ function loadImageWrapper(imagePath: string): Promise<ImageData> {
         }
     })
 }
-
 
 async function imageToUint8Array(image: any, context: any): Promise<Uint8ClampedArray> {
     return new Promise((resolve, reject) => {
@@ -116,53 +142,4 @@ function numpy2Uint8ClampedArray(data: Array<number>): Uint8ClampedArray {
         res[4 * i + 3] = (data[i] === 0) ? 0 : 255
     }
     return res
-}
-
-
-//
-export class RawData {
-    rgba: Uint8Array = new Uint8Array([])
-    width: number = 0
-    height: number = 0
-
-    constructor(imagePath: string) {
-        var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
-        if (extend === 'tiff' || extend === 'tif') {
-            this.loadTiff(imagePath)
-        } else {
-            this.loadImage(imagePath)
-        }
-    }
-
-    loadTiff(imagePath: string) {
-        var xhr = new XMLHttpRequest()
-        xhr.responseType = 'arraybuffer'
-        xhr.open('GET', imagePath)
-        xhr.onload = (e: any) => {
-            var ifds = UTIF.decode(e.target.response)
-            UTIF.decodeImage(e.target.response, ifds[0])
-            var data = UTIF.toRGBA8(ifds[0])
-            for (let i = 0; i < data.length; i++) {
-                this.rgba[i] = data[i]
-            }
-            this.width = ifds[0].width
-            this.height = ifds[0].height
-        }
-        xhr.send()
-    }
-
-    loadImage(imagePath: string) {
-        const img = new Image()
-        img.src = imagePath // 描画する画像など
-        img.onload = async () => {
-            this.width = img.width
-            this.height = img.height
-            const canvas = document.createElement("canvas")
-            const context = canvas.getContext("2d")
-            var data = await imageToUint8Array(img, context)
-            for (let i = 0; i < data.length; i++) {
-                this.rgba[i] = data[i]
-            }
-        }
-    }
 }
