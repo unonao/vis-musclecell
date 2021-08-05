@@ -10,7 +10,6 @@ export interface OverlayCanvasProps {
     max_h: number,
 }
 
-
 const useStyles = makeStyles({
     outsideWrapper: {
         width: (props: OverlayCanvasProps) => props.max_w,
