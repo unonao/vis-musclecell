@@ -1,3 +1,4 @@
+import { hsl2rgb } from "./hsl2rgb";
 // image, mask に対するクラスの定義
 var UTIF = require("utif")
 var npyjs = require("npyjs")
@@ -163,15 +164,21 @@ function numpy2Uint8ClampedArray(data: Array<number>): Uint8ClampedArray {
     const orderlist = [...countmap.entries()].sort((a, b) => b[1] - a[1])
     let colormap = new Map()
     for (let i = 0; i < orderlist.length; i++) {
-        colormap.set(orderlist[i][0], Math.round(i * (255 / unique_len / 2)))
+        colormap.set(orderlist[i][0], Math.round(i * (255 / unique_len)))
     }
     colormap.set(0, 255)
 
     for (let i = 0; i < data.length; i++) {
+        let val: Array<number> = hsl2rgb(colormap.get(data[i]) / 255 / 2 * 1.5, 0.5, 0.5)
+        res[4 * i] = val[0]
+        res[4 * i + 1] = val[1]
+        res[4 * i + 2] = val[2]
+        /*
         let val = colormap.get(data[i])
-        res[4 * i] = val
+        res[4 * i] = 125
         res[4 * i + 1] = val
-        res[4 * i + 2] = val
+        res[4 * i + 2] = val / 2 * 1.5
+        */
         res[4 * i + 3] = (data[i] === 0) ? 0 : 255
     }
     return res
