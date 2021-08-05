@@ -13,6 +13,7 @@ import {
   createBaseImageDataFromFile,
   createMaskImageDataFromFile,
 } from './components/data'
+import { OverlayCanvas } from "./components/modules/OverlayCanvas";
 
 const useStyles = makeStyles({
   slider: {
@@ -33,8 +34,6 @@ const baseAndMaskPairList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num: number) =>
 function App() {
   const classes = useStyles()
   const [maskalpha, setMaskalpha] = React.useState(80)
-  const [selectedBaseFile, setSelectedBaseFile] = React.useState()
-  const [selectedMaskFile, setSelectedMaskFile] = React.useState()
   const [baseImageData, setBaseImageData] = React.useState<ImageData | null>(null)
   const [maskImageData, setMaskImageData] = React.useState<ImageData | null>(null)
   const handleChange = (_event: any, newValue: any) => {
@@ -44,12 +43,10 @@ function App() {
   // tiff select
   const onBaseFileChange = (event: any) => {
     createBaseImageDataFromFile(event.target.files[0]).then((resImageData) => setBaseImageData(resImageData))
-    setSelectedBaseFile(event.target.files[0]);
   };
   // npy select
   const onMaskFileChange = (event: any) => {
     createMaskImageDataFromFile(event.target.files[0]).then((resImageData) => setMaskImageData(resImageData))
-    setSelectedMaskFile(event.target.files[0])
   };
 
 
@@ -103,15 +100,7 @@ function App() {
           <Canvas imageData={maskImageData} max_w={500} max_h={400} idName="mask" />
         </Grid>
         <Grid item xs={12}>
-          <div className="outsideWrapper">
-            <p>画像＋アノテーション</p>
-            <div className="insideWrapper">
-              <Canvas imageData={baseImageData} max_w={500} max_h={400} idName="image_over" />
-              <div style={{ opacity: maskalpha * 0.01 }}>
-                <Canvas imageData={maskImageData} max_w={500} max_h={400} idName="mask_over" />
-              </div>
-            </div>
-          </div>
+          <OverlayCanvas baseImageData={baseImageData} maskImageData={maskImageData} maskalpha={maskalpha} max_w={500} max_h={400} />
         </Grid>
         <Grid item xs={12}>
           <Slider
