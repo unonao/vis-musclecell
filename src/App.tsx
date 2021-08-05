@@ -33,8 +33,6 @@ const baseAndMaskPairList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num: number) =>
 function App() {
   const classes = useStyles()
   const [maskalpha, setMaskalpha] = React.useState(80)
-  const [selectedBaseFile, setSelectedBaseFile] = React.useState()
-  const [selectedMaskFile, setSelectedMaskFile] = React.useState()
   const [baseImageData, setBaseImageData] = React.useState<ImageData | null>(null)
   const [maskImageData, setMaskImageData] = React.useState<ImageData | null>(null)
   const handleChange = (_event: any, newValue: any) => {
@@ -44,13 +42,11 @@ function App() {
   // tiff select
   const onBaseFileChange = (event: any) => {
     createBaseImageDataFromFile(event.target.files[0]).then((resImageData) => setBaseImageData(resImageData))
-    setSelectedBaseFile(event.target.files[0]);
-  };
+  }
   // npy select
   const onMaskFileChange = (event: any) => {
     createMaskImageDataFromFile(event.target.files[0]).then((resImageData) => setMaskImageData(resImageData))
-    setSelectedMaskFile(event.target.files[0])
-  };
+  }
 
 
   useEffect(() => {
@@ -90,8 +86,8 @@ function App() {
 
         <Grid item xs={12}>
           <Grid item xs={12}><p>自分でアップロード</p></Grid>
-          <Grid item xs={12}>画像：<input type="file" onChange={onBaseFileChange} /></Grid>
-          <Grid item xs={12}>アノテーション：<input type="file" onChange={onMaskFileChange} /></Grid>
+          <Grid item xs={12}>画像(.tiff)：<input type="file" onChange={onBaseFileChange} /></Grid>
+          <Grid item xs={12}>アノテーション(.npy)：<input type="file" onChange={onMaskFileChange} /></Grid>
         </Grid>
 
         <Grid item xs={12} md={6}>
