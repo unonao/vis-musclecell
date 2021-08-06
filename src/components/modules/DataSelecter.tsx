@@ -4,10 +4,8 @@ import ButtonGroup from '@material-ui/core/ButtonGroup';
 import Grid from '@material-ui/core/Grid';
 
 import {
-    createBaseImageDataFromPath,
-    createMaskImageDataFromNpy,
-    createBaseImageDataFromFile,
-    createMaskImageDataFromFile,
+    createBaseImageData,
+    createMaskImageData,
 } from '../data'
 
 // 元々のデータ
@@ -30,24 +28,24 @@ export default function DataSelecter(props: DataSelecterProps) {
     const handleClick = (e: any) => {
         var id = e.currentTarget.value
         // base
-        createBaseImageDataFromPath(baseAndMaskPairList[id]['base']).then((resImageData) => props.setBaseImageData(resImageData))
+        createBaseImageData(baseAndMaskPairList[id]['base']).then((resImageData) => props.setBaseImageData(resImageData))
         // mask
-        createMaskImageDataFromNpy(baseAndMaskPairList[id]['mask']).then((resImageData) => props.setMaskImageData(resImageData))
+        createMaskImageData(baseAndMaskPairList[id]['mask']).then((resImageData) => props.setMaskImageData(resImageData))
     };
     // tiff select
     const onBaseFileChange = (event: any) => {
-        createBaseImageDataFromFile(event.target.files[0]).then((resImageData) => props.setBaseImageData(resImageData))
+        createBaseImageData(event.target.files[0]).then((resImageData) => props.setBaseImageData(resImageData))
     };
     // npy select
     const onMaskFileChange = (event: any) => {
-        createMaskImageDataFromFile(event.target.files[0]).then((resImageData) => props.setMaskImageData(resImageData))
+        createMaskImageData(event.target.files[0]).then((resImageData) => props.setMaskImageData(resImageData))
     };
 
     useEffect(() => {
         // base
-        createBaseImageDataFromPath(baseAndMaskPairList[0]['base']).then((resImageData) => props.setBaseImageData(resImageData))
+        createBaseImageData(baseAndMaskPairList[0]['base']).then((resImageData) => props.setBaseImageData(resImageData))
         // mask
-        createMaskImageDataFromNpy(baseAndMaskPairList[0]['mask']).then((resImageData) => props.setMaskImageData(resImageData))
+        createMaskImageData(baseAndMaskPairList[0]['mask']).then((resImageData) => props.setMaskImageData(resImageData))
     }, [])
 
 

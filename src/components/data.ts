@@ -5,6 +5,18 @@ var npyjs = require("npyjs")
 var Tiff = require('tiff.js');
 
 
+
+
+/*
+// npyから画像を表示
+*/
+export async function createBaseImageData(image: string | File): Promise<ImageData> {
+    if (typeof (image) == 'string') {
+        return await createBaseImageDataFromPath(image)
+    } else {
+        return await createBaseImageDataFromFile(image)
+    }
+}
 // localのtiffから画像を表示
 export async function createBaseImageDataFromFile(imageFile: File): Promise<ImageData> {
     var imageData: ImageData;
@@ -16,7 +28,6 @@ export async function createBaseImageDataFromFile(imageFile: File): Promise<Imag
     }
     return imageData
 }
-
 function loadTifFilefWrapper(imageFile: File): Promise<ImageData> {
     return new Promise(function (resolve) {
         var reader = new FileReader();
@@ -37,7 +48,7 @@ function loadTifFilefWrapper(imageFile: File): Promise<ImageData> {
 
 
 // tiff か png,jpegなどから画像を表示
-export async function createBaseImageDataFromPath(imagePath: string): Promise<ImageData> {
+async function createBaseImageDataFromPath(imagePath: string): Promise<ImageData> {
     var imageData: ImageData;
     var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
     if (extend === 'tiff' || extend === 'tif') {
@@ -47,7 +58,6 @@ export async function createBaseImageDataFromPath(imagePath: string): Promise<Im
     }
     return imageData
 }
-
 function loadTiffWrapper(imagePath: string): Promise<ImageData> {
     return new Promise(function (resolve) {
         var xhr = new XMLHttpRequest()
@@ -63,8 +73,6 @@ function loadTiffWrapper(imagePath: string): Promise<ImageData> {
         xhr.send()
     })
 }
-
-
 function loadImageWrapper(imagePath: string): Promise<ImageData> {
     return new Promise(function (resolve) {
         const img = new Image()
@@ -93,13 +101,20 @@ async function imageToUint8Array(image: any, context: any): Promise<Uint8Clamped
 
 
 
-
-/*// npyから画像を表示
+/*
+// npyから画像を表示
 */
-// localから
+export async function createMaskImageData(image: string | File): Promise<ImageData> {
+    if (typeof (image) == 'string') {
+        return await createMaskImageDataFromPath(image)
+    } else {
+        return await createMaskImageDataFromFile(image)
+    }
+}
+
 
 // localのtiffから画像を表示
-export async function createMaskImageDataFromFile(imageFile: File): Promise<ImageData> {
+async function createMaskImageDataFromFile(imageFile: File): Promise<ImageData> {
     var imageData: ImageData;
     var extend: string = imageFile.name.split("/").reverse()[0].split('.')[1]
     if (extend === 'npy') {
@@ -109,7 +124,6 @@ export async function createMaskImageDataFromFile(imageFile: File): Promise<Imag
     }
     return imageData
 }
-
 async function loadNpyFilefWrapper(imageFile: File): Promise<ImageData> {
     return new Promise(function (resolve) {
         let n = new npyjs()
@@ -125,7 +139,7 @@ async function loadNpyFilefWrapper(imageFile: File): Promise<ImageData> {
 }
 
 // 元々
-export async function createMaskImageDataFromNpy(imagePath: string): Promise<ImageData> {
+async function createMaskImageDataFromPath(imagePath: string): Promise<ImageData> {
     var imageData: ImageData;
     var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
     if (extend === 'npy') {
@@ -135,7 +149,6 @@ export async function createMaskImageDataFromNpy(imagePath: string): Promise<Ima
     }
     return imageData
 }
-
 function loadNpyWrapper(imagePath: string): Promise<ImageData> {
     return new Promise(function (resolve) {
         let n = new npyjs();
