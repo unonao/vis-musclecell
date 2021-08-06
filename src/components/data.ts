@@ -5,6 +5,18 @@ var npyjs = require("npyjs")
 var Tiff = require('tiff.js');
 
 
+
+
+/*
+// npyから画像を表示
+*/
+export async function createBaseImageData(image: string | File): Promise<ImageData> {
+    if (typeof (image) == 'string') {
+        return await createBaseImageDataFromPath(image)
+    } else {
+        return await createBaseImageDataFromFile(image)
+    }
+}
 // localのtiffから画像を表示
 export async function createBaseImageDataFromFile(imageFile: File): Promise<ImageData> {
     var imageData: ImageData;
@@ -16,7 +28,6 @@ export async function createBaseImageDataFromFile(imageFile: File): Promise<Imag
     }
     return imageData
 }
-
 function loadTifFilefWrapper(imageFile: File): Promise<ImageData> {
     return new Promise(function (resolve) {
         var reader = new FileReader();
@@ -37,7 +48,7 @@ function loadTifFilefWrapper(imageFile: File): Promise<ImageData> {
 
 
 // tiff か png,jpegなどから画像を表示
-export async function createBaseImageDataFromPath(imagePath: string): Promise<ImageData> {
+async function createBaseImageDataFromPath(imagePath: string): Promise<ImageData> {
     var imageData: ImageData;
     var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
     if (extend === 'tiff' || extend === 'tif') {
@@ -47,7 +58,6 @@ export async function createBaseImageDataFromPath(imagePath: string): Promise<Im
     }
     return imageData
 }
-
 function loadTiffWrapper(imagePath: string): Promise<ImageData> {
     return new Promise(function (resolve) {
         var xhr = new XMLHttpRequest()
@@ -63,8 +73,6 @@ function loadTiffWrapper(imagePath: string): Promise<ImageData> {
         xhr.send()
     })
 }
-
-
 function loadImageWrapper(imagePath: string): Promise<ImageData> {
     return new Promise(function (resolve) {
         const img = new Image()
@@ -94,23 +102,44 @@ async function imageToUint8Array(image: any, context: any): Promise<Uint8Clamped
 
 
 
-/*// npyから画像を表示
-*/
-// localから
 
-// localのtiffから画像を表示
-export async function createMaskImageDataFromFile(imageFile: File): Promise<ImageData> {
-    var imageData: ImageData;
+/*
+// npyから画像を表示
+*/
+
+
+
+export class Mask {
+    rank: number
+    pixelArea: number
+    rgb: Array<number>
+    constructor(rank: number, pixelArea: number, rgb: Array<number>) {
+        this.rank = rank
+        this.pixelArea = pixelArea
+        this.rgb = rgb
+    }
+}
+export async function createMaskImageData(image: string | File): Promise<[ImageData, Array<Mask>]> {
+    if (typeof (image) == 'string') {
+        return await createMaskImageDataFromPath(image)
+    } else {
+        return await createMaskImageDataFromFile(image)
+    }
+}
+
+
+
+// localのnpyから画像を表示
+async function createMaskImageDataFromFile(imageFile: File): Promise<[ImageData, Array<Mask>]> {
     var extend: string = imageFile.name.split("/").reverse()[0].split('.')[1]
     if (extend === 'npy') {
-        imageData = await loadNpyFilefWrapper(imageFile)
+        var [imageData, masks] = await loadNpyFilefWrapper(imageFile)
     } else {
         throw new Error('Not npy file');
     }
-    return imageData
+    return [imageData, masks]
 }
-
-async function loadNpyFilefWrapper(imageFile: File): Promise<ImageData> {
+async function loadNpyFilefWrapper(imageFile: File): Promise<[ImageData, Array<Mask>]> {
     return new Promise(function (resolve) {
         let n = new npyjs()
         n.readFileAsync(imageFile).then((res: any) => {
@@ -118,40 +147,41 @@ async function loadNpyFilefWrapper(imageFile: File): Promise<ImageData> {
             var result = n.parse(res);
             var width = result.shape[1]
             var height = result.shape[0]
-            var rgba = numpy2Uint8ClampedArray(result.data)
-            resolve(new ImageData(rgba, width, height))
+            var [rgba, masks] = numpy2Uint8ClampedArray(result.data)
+            resolve([new ImageData(rgba, width, height), masks])
         })
     })
 }
 
 // 元々
-export async function createMaskImageDataFromNpy(imagePath: string): Promise<ImageData> {
-    var imageData: ImageData;
+async function createMaskImageDataFromPath(imagePath: string): Promise<[ImageData, Array<Mask>]> {
     var extend: string = imagePath.split("/").reverse()[0].split('.')[1]
     if (extend === 'npy') {
-        imageData = await loadNpyWrapper(imagePath)
+        var [imageData, masks] = await loadNpyWrapper(imagePath)
     } else {
         throw new Error('Not npy file');
     }
-    return imageData
+    return [imageData, masks]
 }
-
-function loadNpyWrapper(imagePath: string): Promise<ImageData> {
+function loadNpyWrapper(imagePath: string): Promise<[ImageData, Array<Mask>]> {
     return new Promise(function (resolve) {
         let n = new npyjs();
         n.load(imagePath).then((res: any) => {
             // dtype: string, data: Uint8Array, shape: Array<number>
             var width = res.shape[1]
             var height = res.shape[0]
-            var rgba = numpy2Uint8ClampedArray(res.data)
-            resolve(new ImageData(rgba, width, height))
+            var [rgba, masks] = numpy2Uint8ClampedArray(res.data)
+            resolve([new ImageData(rgba, width, height), masks])
         });
     })
 }
 
-function numpy2Uint8ClampedArray(data: Array<number>): Uint8ClampedArray {
+
+function numpy2Uint8ClampedArray(data: Array<number>): [Uint8ClampedArray, Array<Mask>] {
     let res = new Uint8ClampedArray(4 * data.length)
     let unique_len = Array.from(new Set(data)).length
+
+    let masks = new Array<Mask>(0)
 
     // 種類ごとにピクセル数をカウント
     let countmap = new Map();
@@ -162,24 +192,23 @@ function numpy2Uint8ClampedArray(data: Array<number>): Uint8ClampedArray {
 
     // 降順に255~0までの値を割り振る
     const orderlist = [...countmap.entries()].sort((a, b) => b[1] - a[1])
-    let colormap = new Map()
+    let idmap = new Map() // アノテーションidと降順に並べた時の番号の対応
     for (let i = 0; i < orderlist.length; i++) {
-        colormap.set(orderlist[i][0], Math.round(i * (255 / unique_len)))
+        idmap.set(orderlist[i][0], i)
+        let val: Array<number> = hsl2rgb(Math.round(i * (255 / unique_len)) / 255 / 2 * 1.5, 0.5, 0.5)
+        masks.push(new Mask(orderlist[i][0], orderlist[i][1], val))
     }
-    colormap.set(0, 255)
-
     for (let i = 0; i < data.length; i++) {
-        let val: Array<number> = hsl2rgb(colormap.get(data[i]) / 255 / 2 * 1.5, 0.5, 0.5)
+        let val: Array<number>
+        if (data[i] > 0) {
+            val = masks[idmap.get(data[i])].rgb
+        } else {
+            val = new Array(3)
+        }
         res[4 * i] = val[0]
         res[4 * i + 1] = val[1]
         res[4 * i + 2] = val[2]
-        /*
-        let val = colormap.get(data[i])
-        res[4 * i] = 125
-        res[4 * i + 1] = val
-        res[4 * i + 2] = val / 2 * 1.5
-        */
         res[4 * i + 3] = (data[i] === 0) ? 0 : 255
     }
-    return res
+    return [res, masks]
 }

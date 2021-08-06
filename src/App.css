@@ -1,13 +1,4 @@
-  .outsideWrapper {
-      width:500px;
-      height:400px;
-      margin: auto;
-  }
-  .insideWrapper {
-      width:100%;
-      height:100%;
-      position:relative;
-  }
+
   #image_over {
       width:100%;
       height:100%;
