@@ -6,6 +6,7 @@ import Grid from '@material-ui/core/Grid';
 import {
     createBaseImageData,
     createMaskImageData,
+    Mask
 } from '../data'
 
 // 元々のデータ
@@ -22,6 +23,7 @@ const baseAndMaskPairList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num: number) =>
 interface DataSelecterProps {
     setBaseImageData: React.Dispatch<React.SetStateAction<ImageData | null>>,
     setMaskImageData: React.Dispatch<React.SetStateAction<ImageData | null>>,
+    setMaskObjects: React.Dispatch<React.SetStateAction<Array<Mask> | null>>
 }
 
 export default function DataSelecter(props: DataSelecterProps) {
@@ -30,7 +32,10 @@ export default function DataSelecter(props: DataSelecterProps) {
         // base
         createBaseImageData(baseAndMaskPairList[id]['base']).then((resImageData) => props.setBaseImageData(resImageData))
         // mask
-        createMaskImageData(baseAndMaskPairList[id]['mask']).then((resImageData) => props.setMaskImageData(resImageData))
+        createMaskImageData(baseAndMaskPairList[id]['mask']).then(([resImageData, masks]) => {
+            props.setMaskImageData(resImageData)
+            props.setMaskObjects(masks)
+        })
     };
     // tiff select
     const onBaseFileChange = (event: any) => {
@@ -38,14 +43,20 @@ export default function DataSelecter(props: DataSelecterProps) {
     };
     // npy select
     const onMaskFileChange = (event: any) => {
-        createMaskImageData(event.target.files[0]).then((resImageData) => props.setMaskImageData(resImageData))
+        createMaskImageData(event.target.files[0]).then(([resImageData, masks]) => {
+            props.setMaskImageData(resImageData)
+            props.setMaskObjects(masks)
+        })
     };
 
     useEffect(() => {
         // base
         createBaseImageData(baseAndMaskPairList[0]['base']).then((resImageData) => props.setBaseImageData(resImageData))
         // mask
-        createMaskImageData(baseAndMaskPairList[0]['mask']).then((resImageData) => props.setMaskImageData(resImageData))
+        createMaskImageData(baseAndMaskPairList[0]['mask']).then(([resImageData, masks]) => {
+            props.setMaskImageData(resImageData)
+            props.setMaskObjects(masks)
+        })
     }, [])
 
 
@@ -62,8 +73,8 @@ export default function DataSelecter(props: DataSelecterProps) {
 
             <Grid item xs={12}>
                 <Grid item xs={12}><p>ローカルのファイルを表示</p></Grid>
-                <Grid item xs={12}>画像：<input type="file" onChange={onBaseFileChange} /></Grid>
-                <Grid item xs={12}>アノテーション：<input type="file" onChange={onMaskFileChange} /></Grid>
+                <Grid item xs={12}>画像(tiff)：<input type="file" onChange={onBaseFileChange} /></Grid>
+                <Grid item xs={12}>アノテーション(npy)：<input type="file" onChange={onMaskFileChange} /></Grid>
             </Grid>
         </Grid>
     )
