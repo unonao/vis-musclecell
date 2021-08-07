@@ -10,7 +10,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import Canvas from "./components/modules/Canvas";
 import { OverlayCanvas } from "./components/modules/OverlayCanvas";
 import DataSelecter from "./components/modules/DataSelecter";
-import { Mask } from './components/data';
+import { Mask } from './components/loadData';
 import { MaskVis } from './components/modules/MaskVis';
 
 const useStyles = makeStyles({
@@ -33,6 +33,7 @@ function App() {
   const classes = useStyles()
   const [maskalpha, setMaskalpha] = React.useState(80) // OverlayのMask透過
   const [baseImageData, setBaseImageData] = React.useState<ImageData | null>(null) // base の画像データ
+  const [baseScale, setBaseScale] = React.useState<number | null>(null) // base のピクセルのスケール
   const [maskImageData, setMaskImageData] = React.useState<ImageData | null>(null) // mask の画像データ
   const [maskObjects, setMaskObjects] = React.useState<Array<Mask> | null>(null) // mask のオブジェクトリスト
 
@@ -46,7 +47,7 @@ function App() {
 
       <h1>Muscle cell viewer</h1>
 
-      <DataSelecter setBaseImageData={setBaseImageData} setMaskImageData={setMaskImageData} setMaskObjects={setMaskObjects} />
+      <DataSelecter setBaseImageData={setBaseImageData} setBaseScale={setBaseScale} setMaskImageData={setMaskImageData} setMaskObjects={setMaskObjects} />
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
@@ -60,17 +61,15 @@ function App() {
       </Grid>
 
       <Grid container justifyContent="center" >
-        <Grid item xs={1}></Grid>
-        <Grid item xs={8}>
+        <Grid item xs={12} md={8}>
           <div className={classes.overlay}>
             <OverlayCanvas baseImageData={baseImageData} maskImageData={maskImageData} maskalpha={maskalpha} max_w={max_w} max_h={max_h} />
           </div>
           <Slider className={classes.slider} value={maskalpha} onChange={handleChange} min={0} max={100} aria-labelledby="continuous-slider" />
         </Grid>
-        <Grid item xs={2}>
-          <MaskVis maskObjects={maskObjects} />
+        <Grid item xs={12} md={4}>
+          <MaskVis maskObjects={maskObjects} baseScale={baseScale} />
         </Grid>
-        <Grid item xs={1}></Grid>
       </Grid>
     </div >
   );

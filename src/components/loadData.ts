@@ -1,4 +1,6 @@
 import { hsl2rgb } from "./hsl2rgb";
+import { getPixelScale } from "./getPixelScale"
+
 // image, mask に対するクラスの定義
 var UTIF = require("utif")
 var npyjs = require("npyjs")
@@ -6,16 +8,17 @@ var Tiff = require('tiff.js');
 
 
 
-
 /*
-// npyから画像を表示
+// tiffから画像を表示
 */
-export async function createBaseImageData(image: string | File): Promise<ImageData> {
+export async function createBaseImageData(image: string | File): Promise<[ImageData, number]> {
+    let imagedata: ImageData
     if (typeof (image) == 'string') {
-        return await createBaseImageDataFromPath(image)
+        imagedata = await createBaseImageDataFromPath(image)
     } else {
-        return await createBaseImageDataFromFile(image)
+        imagedata = await createBaseImageDataFromFile(image)
     }
+    return [imagedata, getPixelScale(imagedata)]
 }
 // localのtiffから画像を表示
 export async function createBaseImageDataFromFile(imageFile: File): Promise<ImageData> {
@@ -118,7 +121,10 @@ export class Mask {
         this.pixelArea = pixelArea
         this.rgb = rgb
     }
+
 }
+
+
 export async function createMaskImageData(image: string | File): Promise<[ImageData, Array<Mask>]> {
     if (typeof (image) == 'string') {
         return await createMaskImageDataFromPath(image)
