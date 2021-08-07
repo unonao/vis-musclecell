@@ -11,8 +11,15 @@ import Canvas from "./components/modules/Canvas";
 import { OverlayCanvas } from "./components/modules/OverlayCanvas";
 import DataSelecter from "./components/modules/DataSelecter";
 import { Mask } from './components/data';
+import { MaskVis } from './components/modules/MaskVis';
 
 const useStyles = makeStyles({
+  overlay: {
+    width: 500,
+    height: 400,
+    marginBottom: 50,
+    margin: 'auto',
+  },
   slider: {
     width: 300,
   },
@@ -20,6 +27,9 @@ const useStyles = makeStyles({
 
 
 function App() {
+  let max_w = 500
+  let max_h = 400
+
   const classes = useStyles()
   const [maskalpha, setMaskalpha] = React.useState(80) // OverlayのMask透過
   const [baseImageData, setBaseImageData] = React.useState<ImageData | null>(null) // base の画像データ
@@ -41,23 +51,27 @@ function App() {
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
           <p>画像</p>
-          <Canvas imageData={baseImageData} max_w={500} max_h={400} idName="base" />
+          <Canvas imageData={baseImageData} max_w={max_w} max_h={max_h} idName="base" />
         </Grid>
         <Grid item xs={12} md={6}>
           <p>アノテーション</p>
-          <Canvas imageData={maskImageData} max_w={500} max_h={400} idName="mask" />
-        </Grid>
-        <Grid item xs={12}>
-          <OverlayCanvas baseImageData={baseImageData} maskImageData={maskImageData} maskalpha={maskalpha} max_w={500} max_h={400} />
-        </Grid>
-        <Grid item xs={12}>
-          <Slider className={classes.slider} value={maskalpha} onChange={handleChange} min={0} max={100} aria-labelledby="continuous-slider" />
+          <Canvas imageData={maskImageData} max_w={max_w} max_h={max_h} idName="mask" />
         </Grid>
       </Grid>
 
-      {maskObjects && maskObjects.map((mask, index) => {
-        return <p>{index} {mask.rank}</p>
-      })}
+      <Grid container justifyContent="center" >
+        <Grid item xs={1}></Grid>
+        <Grid item xs={8}>
+          <div className={classes.overlay}>
+            <OverlayCanvas baseImageData={baseImageData} maskImageData={maskImageData} maskalpha={maskalpha} max_w={max_w} max_h={max_h} />
+          </div>
+          <Slider className={classes.slider} value={maskalpha} onChange={handleChange} min={0} max={100} aria-labelledby="continuous-slider" />
+        </Grid>
+        <Grid item xs={2}>
+          <MaskVis maskObjects={maskObjects} />
+        </Grid>
+        <Grid item xs={1}></Grid>
+      </Grid>
     </div >
   );
 }

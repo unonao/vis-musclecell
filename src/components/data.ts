@@ -110,11 +110,11 @@ async function imageToUint8Array(image: any, context: any): Promise<Uint8Clamped
 
 
 export class Mask {
-    rank: number
+    id: number
     pixelArea: number
     rgb: Array<number>
-    constructor(rank: number, pixelArea: number, rgb: Array<number>) {
-        this.rank = rank
+    constructor(id: number, pixelArea: number, rgb: Array<number>) {
+        this.id = id
         this.pixelArea = pixelArea
         this.rgb = rgb
     }
